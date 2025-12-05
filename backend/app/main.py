@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.api import budgets, categories, transactions
-# Import all models to ensure they're registered with Base.metadata for table creation
-from app.models import Category, Budget, Transaction, User, BankAccount  # noqa: F401
+from app.api import budgets, categories, transactions, bank_accounts, users
 
 # Create database tables (only creates tables that don't exist - safe to call multiple times)
 Base.metadata.create_all(bind=engine)
@@ -27,6 +25,8 @@ app.add_middleware(
 app.include_router(budgets.router, prefix="/api/budgets", tags=["budgets"])
 app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["transactions"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(bank_accounts.router, prefix="/api/bank-accounts", tags=["bank-accounts"])
 
 @app.get("/")
 async def root():

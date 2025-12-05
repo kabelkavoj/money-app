@@ -72,7 +72,7 @@ pip install -r requirements.txt
 
 4. (Optional) Seed the database with sample data:
 ```bash
-python app/seed_data.py
+python -m app.seed_data
 ```
 
 5. Start the backend server:

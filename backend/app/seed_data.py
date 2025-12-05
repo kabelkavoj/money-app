@@ -8,6 +8,8 @@ from app.database import SessionLocal, engine, Base
 from app.models.category import Category
 from app.models.budget import Budget
 from app.models.transaction import Transaction
+from app.models.user import User
+from app.models.bank_account import BankAccount
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -16,9 +18,26 @@ db = SessionLocal()
 
 try:
     # Check if data already exists
-    if db.query(Category).count() > 0:
+    if db.query(Category).count() > 0 or db.query(User).count() > 0:
         print("Database already has data. Skipping seed.")
         exit(0)
+    
+    # Create users first (needed for bank accounts)
+    print("Creating users...")
+    users = [
+        User(username="john_doe", email="john@example.com", full_name="John Doe"),
+        User(username="jane_smith", email="jane@example.com", full_name="Jane Smith"),
+    ]
+    
+    for user in users:
+        db.add(user)
+    db.commit()
+    
+    print(f"Created {len(users)} users")
+    
+    # Get user IDs for bank accounts
+    john = db.query(User).filter(User.username == "john_doe").first()
+    jane = db.query(User).filter(User.username == "jane_smith").first()
 
     # Create categories
     categories = [
@@ -85,6 +104,46 @@ try:
     db.commit()
 
     print(f"Created {len(transactions)} transactions")
+    
+    # Create bank accounts
+    print("\nCreating bank accounts...")
+    bank_accounts = [
+        BankAccount(
+            name="John's Checking",
+            currency="USD",
+            initial_balance=5000.0,
+            current_balance=5000.0,
+            owner_id=john.id
+        ),
+        BankAccount(
+            name="John's Savings",
+            currency="USD",
+            initial_balance=10000.0,
+            current_balance=10000.0,
+            owner_id=john.id
+        ),
+        BankAccount(
+            name="Jane's Checking",
+            currency="USD",
+            initial_balance=3000.0,
+            current_balance=3000.0,
+            owner_id=jane.id
+        ),
+        BankAccount(
+            name="Jane's EUR Account",
+            currency="EUR",
+            initial_balance=2000.0,
+            current_balance=2000.0,
+            owner_id=jane.id
+        ),
+    ]
+    
+    for account in bank_accounts:
+        db.add(account)
+    db.commit()
+    
+    print(f"Created {len(bank_accounts)} bank accounts")
+    
     print("\n✅ Seed data created successfully!")
     print("\nYou can now:")
     print("1. Start the backend: cd backend && uvicorn app.main:app --reload")
