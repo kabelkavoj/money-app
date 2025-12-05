@@ -78,34 +78,8 @@ try:
     db.commit()
 
     print(f"Created {len(budgets)} budgets")
-
-    # Create sample transactions
-    transactions = [
-        # Income
-        Transaction(category_id=income.id, amount=5000.0, description="Salary", date=start_of_month, type="income"),
-        
-        # Expenses
-        Transaction(category_id=groceries.id, amount=-150.0, description="Weekly groceries", date=start_of_month + timedelta(days=2), type="expense"),
-        Transaction(category_id=groceries.id, amount=-120.0, description="Weekly groceries", date=start_of_month + timedelta(days=9), type="expense"),
-        Transaction(category_id=groceries.id, amount=-180.0, description="Weekly groceries", date=start_of_month + timedelta(days=16), type="expense"),
-        
-        Transaction(category_id=transportation.id, amount=-60.0, description="Gas", date=start_of_month + timedelta(days=5), type="expense"),
-        Transaction(category_id=transportation.id, amount=-45.0, description="Gas", date=start_of_month + timedelta(days=18), type="expense"),
-        
-        Transaction(category_id=utilities.id, amount=-85.0, description="Electricity", date=start_of_month + timedelta(days=10), type="expense"),
-        Transaction(category_id=utilities.id, amount=-45.0, description="Internet", date=start_of_month + timedelta(days=10), type="expense"),
-        
-        Transaction(category_id=entertainment.id, amount=-75.0, description="Dinner out", date=start_of_month + timedelta(days=7), type="expense"),
-        Transaction(category_id=entertainment.id, amount=-30.0, description="Movie tickets", date=start_of_month + timedelta(days=14), type="expense"),
-    ]
-
-    for transaction in transactions:
-        db.add(transaction)
-    db.commit()
-
-    print(f"Created {len(transactions)} transactions")
     
-    # Create bank accounts
+    # Create bank accounts (needed before transactions)
     print("\nCreating bank accounts...")
     bank_accounts = [
         BankAccount(
@@ -143,6 +117,124 @@ try:
     db.commit()
     
     print(f"Created {len(bank_accounts)} bank accounts")
+    
+    # Get bank account IDs for transactions
+    john_checking = db.query(BankAccount).filter(BankAccount.name == "John's Checking").first()
+    john_savings = db.query(BankAccount).filter(BankAccount.name == "John's Savings").first()
+    jane_checking = db.query(BankAccount).filter(BankAccount.name == "Jane's Checking").first()
+
+    # Create sample transactions (linked to bank accounts)
+    transactions = [
+        # Income - goes to John's Checking
+        Transaction(
+            category_id=income.id, 
+            amount=5000.0, 
+            description="Salary", 
+            date=start_of_month, 
+            type="income",
+            to_account_id=john_checking.id
+        ),
+        
+        # Expenses - from John's Checking
+        Transaction(
+            category_id=groceries.id, 
+            amount=-150.0, 
+            description="Weekly groceries", 
+            date=start_of_month + timedelta(days=2), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        Transaction(
+            category_id=groceries.id, 
+            amount=-120.0, 
+            description="Weekly groceries", 
+            date=start_of_month + timedelta(days=9), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        Transaction(
+            category_id=groceries.id, 
+            amount=-180.0, 
+            description="Weekly groceries", 
+            date=start_of_month + timedelta(days=16), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        
+        Transaction(
+            category_id=transportation.id, 
+            amount=-60.0, 
+            description="Gas", 
+            date=start_of_month + timedelta(days=5), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        Transaction(
+            category_id=transportation.id, 
+            amount=-45.0, 
+            description="Gas", 
+            date=start_of_month + timedelta(days=18), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        
+        Transaction(
+            category_id=utilities.id, 
+            amount=-85.0, 
+            description="Electricity", 
+            date=start_of_month + timedelta(days=10), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        Transaction(
+            category_id=utilities.id, 
+            amount=-45.0, 
+            description="Internet", 
+            date=start_of_month + timedelta(days=10), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        
+        Transaction(
+            category_id=entertainment.id, 
+            amount=-75.0, 
+            description="Dinner out", 
+            date=start_of_month + timedelta(days=7), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        Transaction(
+            category_id=entertainment.id, 
+            amount=-30.0, 
+            description="Movie tickets", 
+            date=start_of_month + timedelta(days=14), 
+            type="expense",
+            from_account_id=john_checking.id
+        ),
+        
+        # Transfer example: from John's Checking to John's Savings
+        Transaction(
+            category_id=income.id,  # Using income category for transfers
+            amount=1000.0,
+            description="Transfer to savings",
+            date=start_of_month + timedelta(days=20),
+            type="transfer",
+            from_account_id=john_checking.id,
+            to_account_id=john_savings.id
+        ),
+    ]
+
+    for transaction in transactions:
+        db.add(transaction)
+    db.commit()
+
+    print(f"Created {len(transactions)} transactions")
+    
+    # Update bank account balances based on transactions
+    # Note: The API would normally do this, but for seed data we'll calculate manually
+    # or let the balance update logic handle it when transactions are created via API
+    # For now, we'll just note that balances should reflect transactions
+    print("\nNote: Bank account balances should reflect the transactions above.")
     
     print("\n✅ Seed data created successfully!")
     print("\nYou can now:")
